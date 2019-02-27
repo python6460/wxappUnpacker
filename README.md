@@ -1,59 +1,131 @@
-# wxappUnpacker
+# MyWxAppUnpacker
 
-![版本 0.2.3](https://img.shields.io/badge/版本-0.2.3-red.svg) ![支持的微信版本 >20180111](https://img.shields.io/badge/%E5%BE%AE%E4%BF%A1%E7%89%88%E6%9C%AC-%3E20180111-brightgreen.svg) ![高级特性支持度 0](https://img.shields.io/badge/%E6%94%AF%E6%8C%81-0%25-yellow.svg)
+![版本 0.3](https://img.shields.io/badge/版本-0.3-red.svg) ![支持的微信版本 >20180111](https://img.shields.io/badge/%E5%BE%AE%E4%BF%A1%E7%89%88%E6%9C%AC-%3E=20180111-brightgreen.svg)
 
 > Wechat App(微信小程序, .wxapkg)解包及相关文件(.wxss, .json, .wxs, .wxml)还原工具
 
-## 当前功能如下
+## 1. 说明
 
-- `node wuConfig.js <files...>` 将 app-config.json 中的内容拆分到各个文件对应的 .json 和 app.json , 并通过搜索 app-config.json 所在文件夹下的所有文件尝试将 iconData 还原为 iconPath 。
-- `node wuJs.js <files...>` 将 app-service.js (或小游戏中的 game.js ) 拆分成一系列原先独立的 javascript 文件，并使用 Uglify-ES 美化，从而尽可能还原编译前的情况。
-- `node wuWxml.js [-m] <files...>` 将编译/混合到 page-frame.html ( 或 app-wxss.js ) 中的 wxml 和 wxs 文件还原为独立的、未编译的文件。如果加上`-m`指令，就会阻止`block`块自动省略，可能帮助解决一些相关过程的 bug 。
-- `node wuWxss.js <dirs...>` 通过获取文件夹下的 page-frame.html ( 或 app-wxss.js ) 和其他 html 文件的内容，还原出编译前 wxss 文件的内容。
-- `node wuWxapkg.js [-d] <files...>` 将 wxapkg 文件解包，并将包中上述命令中所提的被编译/混合的文件自动地恢复原状。如果加上`-d`指令，就会保留编译/混合后所生成的新文件，否则会自动删去这些文件。同时，前面命令中的指令也可直接加在这一命令上。
+- 本文是基于 [wxappUnpacker](https://github.com/qwerty472123/wxappUnpacker "wxappUnpacker") 创作的。
+> - [x] 修复 “ReferenceError: $gwx is not defined” 和 extract wxss 等问题
+> - [x] 支持分包
+> - [x] 支持一键解包
+> - [x] 支持一键安装各种依赖
 
-### wxapkg 包的获取
+一键匹配、统计文本中的内容，请下载 [calcwords](https://github.com/larack8/calcwords "calcwords") 。
+
+### 2. wxapkg 包的获取
 
 Android 手机最近使用过的微信小程序所对应的 wxapkg 包文件都存储在特定文件夹下，可通过以下命令查看：
 
-    adb pull /data/data/com.tencent.mm/MicroMsg/{User}/appbrand/pkg
+    adb pull /data/data/com.tencent.mm/MicroMsg/{User}/appbrand/pkg ./
 
 其中`{User}` 为当前用户的用户名，类似于 `2bc**************b65`。
 
-### 另注
+## 3. 用法
 
-所有命令上都可以使用`-f`指令来提高一定的并行度，但输出信息会混乱。
+用法分 mac 和 windows，请根据系统来操作
 
-### 局限（包括但可能不限于以下内容）
+### 1. for Mac OS (Mac操作系统)
 
-- 实现中很多功能基于特定的版本(`wcc-v0.6vv_20180111_fbi`, 且不考虑面向低版本适配)和字符串搜索，所以不能很好的适应各种特殊情况。
-- wxml 文件拥有不同于 xml 和 html 文件的字符转义规则，且尚未公开(并非"没有")，因此未能很好的还原相关内容。
-- js 文件被压缩后会丢失原始变量名等信息内容无法还原；wxss 文件压缩后的注释也会丢失。
-- wxs 文件会将所有的变量如 Math 改为 nv_Math ，这里仅通过字符串替换去除。
-- 一些被引用 wxss 文件本身的源文件丢失，因此无法恢复原始目录。
-- 有些项目开启了难以复原的`es6转es5`选项，检验本项目结果是否正确时需要关闭项目中的`es6转es5`选项。
-- wxml 中一些无法找到相对应 的正向语句的内容无法还原。
-- json 中`components`项丢失，仅会标注被其他包引用的自定义组件。
+- 安装npm和node
 
-## 依赖
+```bash
+./install.sh -npm
+```
 
-这些 node.js 程序除了自带的 API 外还依赖于以下包:
-[cssbeautify](https://github.com/senchalabs/cssbeautify)、[CSSTree](https://github.com/csstree/csstree)、[VM2](https://github.com/patriksimek/vm2)、[Esprima](https://github.com/jquery/esprima)、[UglifyES](https://github.com/mishoo/UglifyJS2/tree/harmony)、[js-beautify](https://github.com/beautify-web/js-beautify)
+- 安装依赖
 
-您需要安装这些包才能正确执行这些程序，为了做到这一点，您可以执行`npm install`；另外如需全局安装这些包可执行以下命令:
+```bash
+./install.sh
+```
 
-    npm install esprima -g
-    npm install css-tree -g
-    npm install cssbeautify -g
-    npm install vm2 -g
-    npm install uglify-es -g
-    npm install js-beautify -g
+- 解包某个小程序
 
-此外，这些 node.js 程序之间也有一定的依赖关系，比如他们都依赖于 wuLib.js 。
+```bash
+./de_miniapp.sh  -d 小程序包路径(.wxapkg格式)
+```
+
+- 一键解文件夹下所有小程序
+
+```bash
+./de_miniapp.sh  小程序包所在文件夹
+```
+
+- 一键解当前文件夹下所有小程序
+
+```bash
+./de_miniapp.sh
+```
+
+** 举例
+
+Mac OS
+```bash
+./de_miniapp.sh -d ./testpkg/_-751579163_42.wxapkg
+```
+
+![解包后的目录文件](testpkg/testdir.png)
+
+### 2. for Windows OS (Windows 操作系统)
+
+- 解包某个小程序
+
+```bash
+node wuWxapkg.js 小程序包路径(.wxapkg格式)
+```
+
+** 举例
+
+```bash
+node wuWxapkg.js testpkg\_-751579163_42.wxapkg
+```
+
+### 4. 提取统计WXSS或者其他样式
+
+`详情参照` [calcwords](https://github.com/larack8/calcwords "calcwords")
+
+1. 下载calcwords源码
+
+```bash
+git clone https://github.com/larack8/calcwords
+```
+
+2. 设置统计的.wxapkg路径和输入结果路径，调用 calcWxssStyle
+
+```bash
+	public static void testCalcWords() throws IOException {
+		String fromFilePath = "/Users/Shared/my_git/java/CalcWords/testletters/";
+		String resultFilePath = "/Users/Shared/my_git/java/CalcWords/result.txt";
+
+		calcWxssStyle(fromFilePath, resultFilePath);// 统计微信小程序源码WWXSS样式
+//		calcWxssProperty(fromFilePath, resultFilePath);// 统计微信小程序源码WXSS属性
+	}
+```
+
+3. 打开输出结果文件
+
+如下图样式
+
+![输出结果文件](testpkg/cc.png)
 
 
-## 参考
+### 5. 关于作者
 
-这些实现除了参考微信小程序开发文档、 wxapkg 文件解包后的内容以及通过开发者工具编译的一些 wxml 外，还参考了一些 github 上的相关内容的分析( [unwxapkg.py](https://gist.github.com/feix/32ab8f0dfe99aa8efa84f81ed68a0f3e)、[wechat-app-unpack](https://github.com/leo9960/wechat-app-unpack/) )，在此感谢他们。
+> * jinqianli
 
-另外，如果您对本程序的一些具体实现细节感兴趣，可以参考 [DETAILS.md](https://github.com/qwerty472123/wxappUnpacker/blob/master/DETAILS.md) 。
+> * email: [jinqiangood@gmail.com], [larack@126.com]
+
+> * [jinqianli-知乎](https://www.zhihu.com/people/jinqianli/)
+
+> * [jinqianli-cnblog](https://www.cnblogs.com/larack/)
+
+> * jinqianli-官方小程序
+
+![jinqianli-官方小程序](testpkg/jinqianli_miniapp_logo.png)
+
+如果你觉得这篇文章很好，请赞赏作者加个鸡腿吧
+
+![jinqianli-赞赏码](testpkg/jinqianli_shoukuan.png)
+
+`jinqianli,2019.02.20`
